@@ -1,0 +1,196 @@
+# -*- coding: utf-8 -*-
+"""
+@author: Jenny Hallqvist
+"""
+# Import packages and functions
+import pandas as pd
+import numpy as np
+from sklearn.feature_selection import RFE, RFECV
+from sklearn.svm import LinearSVC as SVM
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import roc_curve
+from sklearn.metrics import auc
+import matplotlib.pyplot as plt 
+from JH_function_zScore import zScore
+plt.rcParams.update({'font.sans-serif':'Futura Lt BT'})
+
+# =============================================================================
+# Load the main dataset, z-score variables, replace NaN with median and define x and y of dataset
+# =============================================================================
+dataFile = r'C:\Users\Jenny Halqvist\OneDrive - University College London\Paper_Predictive_PD_Markers\CurrentDocuments\DNP_FinalTable_ForSubmission.xlsx'
+sheetName = 'MRM_Dataset_AllSamples'
+DF_Import = pd.read_excel(dataFile, sheet_name=sheetName, header=0, skiprows=None, 
+                  skipfooter=0, index_col=0, names=None, 
+                  parse_dates=False, date_parser=None, 
+                  na_values=None, thousands=None, convert_float=True, 
+                  converters=None, true_values=None, 
+                  false_values=None, engine=None, squeeze=False)
+
+DF_Import = zScore(DF_Import,2) #z-score data
+DF_DNP_DKK = DF_Import[DF_Import['Class'].isin(['DKK', 'DNP'])] # Collect controls and de novo PD samples
+x_DNP_DKK = DF_DNP_DKK.iloc[:,2:] # Define x
+y = DF_DNP_DKK['DKK_0_DNP_1'] # Define y
+x_DNP_DKK.fillna(x_DNP_DKK.median(), inplace = True) # Replace NaNs with median
+# =============================================================================
+
+# =============================================================================
+# Select a random set from the dataframe to use as a training set
+# =============================================================================
+x_train, x_test, y_train, y_test = train_test_split(x_DNP_DKK, y, 
+                                                        test_size = 0.3, 
+                                                        random_state = 0)
+# =============================================================================
+
+# =============================================================================
+# Determine the number of features to select for SVM
+# =============================================================================
+estimator_SVM = SVM()
+selector_SVM = RFECV(estimator_SVM, step = 1, cv = StratifiedKFold(n_splits=5, 
+                                                                   shuffle=True, 
+                                                                   random_state=0))
+selector_SVM = selector_SVM.fit(x_train, y_train)
+numberFeatures_SVM = np.count_nonzero(selector_SVM.support_)
+# =============================================================================
+
+# =============================================================================
+# Select features and train the model
+# =============================================================================
+selector_SVM = RFE(estimator_SVM, n_features_to_select = numberFeatures_SVM, step = 1)
+selector_SVM = selector_SVM.fit(x_train, y_train)
+varSelection_SVM = selector_SVM.support_
+varRank_SVM = selector_SVM.ranking_
+varList_SVM = pd.DataFrame(list(zip(DF_DNP_DKK.columns[2:], varSelection_SVM, varRank_SVM)), 
+                       columns = ['Variable_SVM', 'BooleanSelector', 'Variable_Ranking'])
+varList_SVM = varList_SVM[varList_SVM.BooleanSelector != False]
+varList_SVM = list(varList_SVM['Variable_SVM'])
+svm = SVM()
+regModel_SVM = svm.fit(x_train[[*varList_SVM]], y_train)
+# =============================================================================
+
+# =============================================================================
+# Predict y in the reduced models
+# =============================================================================
+class_pred_SVM = regModel_SVM.predict(x_test[[*varList_SVM]]) # Predicted classes
+modelScore_SVM = regModel_SVM.score(x_train[[*varList_SVM]], y_train) # Scores of the training model
+cv_score_SVM = cross_val_score(regModel_SVM, x_train[[*varList_SVM]], # CV scores of the training model
+                               y_train, cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)).mean() 
+predClasses = pd.DataFrame(list(zip(y_test, class_pred_SVM)),
+                           index = y_test.index, columns = ['Actual class', 'Predicted class SVM']).sort_values(by = ['Actual class'])
+# =============================================================================
+
+# =============================================================================
+# Predict class of DKS and OND samples
+# =============================================================================
+DF_OND_DKS = DF_Import[DF_Import['Class'].isin(['OND', 'DKS'])] # OND and iRBD samples
+x_OND_DKS = DF_OND_DKS.iloc[:,2:] # Define x
+x_OND_DKS.fillna(x_OND_DKS.median(), inplace = True)
+
+class_pred_SVM_OND_DKS = regModel_SVM.predict(x_OND_DKS[[*varList_SVM]]) # Predicted classes
+
+predClasses_OND_DKS = pd.DataFrame(list(zip(DF_OND_DKS['Class'], class_pred_SVM_OND_DKS)),
+                           index = x_OND_DKS.index, columns = ['Actual class', 'Predicted class SVM'])
+# =============================================================================
+
+# =============================================================================
+# Plots
+# =============================================================================
+# Important features
+featImport = pd.DataFrame(regModel_SVM.coef_, index = ['Coeff'], columns = varList_SVM).transpose()
+featImport = abs(featImport).sort_values(by = ['Coeff'])
+
+fig, ax = plt.subplots(figsize = [10,10], tight_layout = True) 
+plt.hlines(featImport.index, xmin = 0, xmax = featImport['Coeff'], 
+           linewidth = 5, color = 'lightcoral', alpha = 0.5)
+plt.plot(featImport['Coeff'], range(0, len(featImport.index)), 'o', markersize = 30, 
+         color = 'lightcoral')
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.spines['left'].set_visible(False)
+ax.spines['bottom'].set_visible(False)
+ax.xaxis.label.set_fontsize(20)
+ax.yaxis.label.set_fontsize(20)
+plt.xticks(fontsize = 18)
+plt.yticks(fontsize = 18)
+plt.xlabel("Feature importance")
+plt.show()
+
+# Results of final predictions
+fig, ax = plt.subplots(figsize = [10,10], tight_layout = True) 
+j = 0
+for j in range(len(predClasses.columns)):
+    colours = predClasses[predClasses.columns[j]].replace(0, 'grey')
+    colours = colours.replace(1, 'lightcoral')
+    plt.scatter(np.linspace(0, len(predClasses), len(predClasses)), 
+                predClasses[predClasses.columns[j]] + j*5, 
+                c = colours, s = 400, alpha = 0.8, lw = 3)
+    j = j + 1
+    
+ax.set_yticks([0.5, 5.5])
+ax.set_xticks([])
+ax.set_yticklabels(predClasses.columns, fontsize = 18)
+ax.spines['right'].set_visible(False)
+ax.spines['left'].set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.spines['bottom'].set_visible(False)
+plt.show()
+
+# # Plot ROC of training set
+y_train_pred = regModel_SVM.decision_function(x_train[[*varList_SVM]])    
+roc_curve(y_train, y_train_pred)
+fig, ax = plt.subplots(figsize = (15,15))
+train_fpr, train_tpr, tr_thresholds = roc_curve(y_train, y_train_pred)
+plt.plot(train_fpr, train_tpr, label = ' Combined SVM predictors (AUC = ' + str(auc(train_fpr, train_tpr)) + ')',  
+                                  alpha = 0.5, lw = 12, ls = 'solid', c = 'grey')
+myPalette = ['#E50000', '#FF4653', '#EE7879', '#F4ABAA','#E50000', '#FF4653', '#EE7879', '#F4ABAA']
+line = ['solid','solid','solid','solid','dashed','dashdot','dotted','dashed']
+
+col = 0
+for var in varList_SVM:
+    svmSingle_model = svm.fit(x_train[var].values.reshape(-1,1), y_train)
+    y_train_pred_s = svmSingle_model.decision_function(x_train[var].values.reshape(-1,1))    
+    train_fpr_s, train_tpr_s, tr_thresholds_s = roc_curve(y_train, y_train_pred_s)
+    plt.plot(train_fpr_s, train_tpr_s, label = var + ' (AUC = ' + str(round(auc(train_fpr_s, train_tpr_s),2)) + ')',  
+              ls = line[col], alpha = 0.9, lw = 6, c = myPalette[col])
+    col = col + 1
+
+plt.plot([0,1],[0,1], ls = 'dashed', c = 'grey', alpha = 0.8)
+
+# Plot ROC of test set
+y_test_pred = regModel_SVM.decision_function(x_test[[*varList_SVM]])    
+roc_curve(y_test, y_test_pred)
+fig, ax = plt.subplots(figsize = (15,15))
+test_fpr, test_tpr, __ = roc_curve(y_test, y_test_pred)
+plt.plot(test_fpr, test_tpr, label = ' Combined SVM predictors (AUC = ' + str(auc(test_fpr, test_tpr)) + ')',  
+                                  alpha = 0.5, lw = 12, ls = 'solid', c = 'grey')
+
+myPalette = ['#E50000', '#FF4653', '#EE7879', '#F4ABAA','#E50000', '#FF4653', '#EE7879', '#F4ABAA']
+line = ['solid','solid','solid','solid','dashed','dashdot','dotted','dashed']
+
+col = 0
+for var in varList_SVM:
+    svmSingle_model = svm.fit(x_train[var].values.reshape(-1,1), y_train)
+    y_test_pred_s = svmSingle_model.decision_function(x_test[var].values.reshape(-1,1))    
+    test_fpr_s, test_tpr_s, __ = roc_curve(y_test, y_test_pred_s)
+    plt.plot(test_fpr_s, test_tpr_s, label = var + ' (AUC = ' + str(round(auc(test_fpr_s, test_tpr_s),2)) + ')',  
+              ls = line[col], alpha = 0.9, lw = 6, c = myPalette[col])
+    col = col + 1
+
+plt.plot([0,1],[0,1], ls = 'dashed', c = 'grey', alpha = 0.8)
+    
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+ax.spines['bottom'].set_visible(False)
+ax.spines['left'].set_visible(False)
+ax.xaxis.label.set_fontsize(26)
+ax.yaxis.label.set_fontsize(26)
+plt.xticks(fontsize = 18)
+plt.yticks(fontsize = 18)
+plt.legend(fontsize = 20)
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.show()
+# =============================================================================
+
+
