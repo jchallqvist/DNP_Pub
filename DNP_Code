@@ -1,8 +1,25 @@
-# -*- coding: utf-8 -*-
-"""
-@author: Jenny Hallqvist
-"""
+Proteomics and machine learning identify a distinct biomarker panel to detect prodromal and early Parkinson’s disease
+
+Jenny Hällqvist1,2*, Michael Bartl3*, Mohammed Dakna3, Sebastian Schade4, Paolo Garagnani5, Maria-Giulia Bacalini6,  Chiara Pirazzini5, Kailash Bhatia7, Sebastian Schreglmann7, Mary Xylaki3,  Sandrina Weber3, Marielle Ernst8, Maria-Lucia Muntean4, Friederike Sixel-Döring4,9, Claudio Franceschi5, Ivan Doykov1, Claudia Trenkwalder4,10 Wendy E. Heywood1, PROPAGE-AGEING Consortium, Kevin Mills2*, Brit Mollenhauer3,4*
+
+1	UCL Institute of Child Health and Great Ormond Street Hospital, London, UK
+2	UCL Queen Square Institute of Neurology, Clinical and Movement Neurosciences, London, UK
+3	Department of Neurology, University Medical Center Goettingen, Germany
+4	Paracelsus-Elena-Klinik, Kassel, Germany
+5	Department of Experimental, Diagnostic, and Specialty Medicine (DIMES), University of Bologna, Bologna, Italy
+6	IRCCS Istituto delle Scienze Neurologiche di Bologna, Bologna, Italy
+7	National Hospital for Neurology & Neurosurgery, Queen Square, London, WC1N3BG
+8	Institute of Diagnostic and Interventional Neuroradiology, University Medical Center Goettingen, Germany
+9	Department of Neurology, Philipps-University, Marburg, Germany
+10	Department of Neurosurgery, University Medical Center Goettingen, Robert-Koch Str. 40, 37075 Goettingen, Germany
+11	PROPAGE-AGEING Consortium
+
+*Both first and last authors contributed equally
+
+
+# =============================================================================
 # Import packages and functions
+# =============================================================================
 import pandas as pd
 import numpy as np
 from sklearn.feature_selection import RFE, RFECV
@@ -15,6 +32,7 @@ from sklearn.metrics import auc
 import matplotlib.pyplot as plt 
 from JH_function_zScore import zScore
 plt.rcParams.update({'font.sans-serif':'Futura Lt BT'})
+# =============================================================================
 
 # =============================================================================
 # Load the main dataset, z-score variables, replace NaN with median and define x and y of dataset
