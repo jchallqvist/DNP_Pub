@@ -19,8 +19,8 @@ plt.rcParams.update({'font.sans-serif':'Futura Lt BT'})
 # =============================================================================
 # Load the main dataset, z-score variables, replace NaN with median and define x and y of dataset
 # =============================================================================
-dataFile = r'C:\Users\Jenny Halqvist\OneDrive - University College London\Paper_Predictive_PD_Markers\CurrentDocuments\DNP_FinalTable_ForSubmission.xlsx'
-sheetName = 'MRM_Dataset_AllSamples'
+dataFile = r'...'                                                 # Path to .xlsx file, including .xlsx extension
+sheetName = '...'                                                 # Sheet name
 DF_Import = pd.read_excel(dataFile, sheet_name=sheetName, header=0, skiprows=None, 
                   skipfooter=0, index_col=0, names=None, 
                   parse_dates=False, date_parser=None, 
@@ -28,11 +28,11 @@ DF_Import = pd.read_excel(dataFile, sheet_name=sheetName, header=0, skiprows=Non
                   converters=None, true_values=None, 
                   false_values=None, engine=None, squeeze=False)
 
-DF_Import = zScore(DF_Import,2) #z-score data
-DF_DNP_DKK = DF_Import[DF_Import['Class'].isin(['DKK', 'DNP'])] # Collect controls and de novo PD samples
-x_DNP_DKK = DF_DNP_DKK.iloc[:,2:] # Define x
-y = DF_DNP_DKK['DKK_0_DNP_1'] # Define y
-x_DNP_DKK.fillna(x_DNP_DKK.median(), inplace = True) # Replace NaNs with median
+DF_Import = zScore(DF_Import,2)                                   # z-score data
+DF_DNP_DKK = DF_Import[DF_Import['Class'].isin(['DKK', 'DNP'])]   # Collect controls and de novo PD samples
+x_DNP_DKK = DF_DNP_DKK.iloc[:,2:]                                 # Define x
+y = DF_DNP_DKK['DKK_0_DNP_1']                                     # Define y
+x_DNP_DKK.fillna(x_DNP_DKK.median(), inplace = True)              # Replace NaNs with median
 # =============================================================================
 
 # =============================================================================
@@ -72,7 +72,7 @@ regModel_SVM = svm.fit(x_train[[*varList_SVM]], y_train)
 # =============================================================================
 # Predict y in the reduced models
 # =============================================================================
-class_pred_SVM = regModel_SVM.predict(x_test[[*varList_SVM]]) # Predicted classes
+class_pred_SVM = regModel_SVM.predict(x_test[[*varList_SVM]])         # Predicted classes
 modelScore_SVM = regModel_SVM.score(x_train[[*varList_SVM]], y_train) # Scores of the training model
 cv_score_SVM = cross_val_score(regModel_SVM, x_train[[*varList_SVM]], # CV scores of the training model
                                y_train, cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)).mean() 
@@ -83,8 +83,8 @@ predClasses = pd.DataFrame(list(zip(y_test, class_pred_SVM)),
 # =============================================================================
 # Predict class of DKS and OND samples
 # =============================================================================
-DF_OND_DKS = DF_Import[DF_Import['Class'].isin(['OND', 'DKS'])] # OND and iRBD samples
-x_OND_DKS = DF_OND_DKS.iloc[:,2:] # Define x
+DF_OND_DKS = DF_Import[DF_Import['Class'].isin(['OND', 'DKS'])]     # OND and iRBD samples
+x_OND_DKS = DF_OND_DKS.iloc[:,2:]                                   # Define x
 x_OND_DKS.fillna(x_OND_DKS.median(), inplace = True)
 
 class_pred_SVM_OND_DKS = regModel_SVM.predict(x_OND_DKS[[*varList_SVM]]) # Predicted classes
