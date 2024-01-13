@@ -54,23 +54,17 @@ plt.rcParams.update({'font.sans-serif':'Century Gothic'})
 # =============================================================================
 # Load the main dataset, z-score variables, replace NaN with median and define x and y of dataset
 # =============================================================================
-dataFile = r'C:\Users\Jenny Hallqvist\OneDrive - University College London\Paper_Predictive_PD_Markers\CurrentDocuments\DNP_FinalTable_ForSubmission.xlsx'
-sheetName = 'MRM_Dataset_AllSamples'
+dataFile = r'...' # Path to Excel file
+sheetName = '...' # Name of Excel sheet
 
-dataFile_2 = folderLocation = r'C:\Users\Jenny Hallqvist\OneDrive - University College London\Paper_Predictive_PD_Markers\Nature_Communications_ReviewWork\NewData_Results\SampleSelection_NewSamples.xlsx'
-sheetName_2 = 'Data_forPredictions_Tidy'
+dataFile_2 = folderLocation = r'...' # Path to Excel file containing new data
+sheetName_2 = '...' # Name of Excel sheet
 
-DF_Import = pd.read_excel(dataFile, sheet_name=sheetName, header=0, skiprows=None, 
-                  skipfooter=0, index_col=0, names=None, 
-                  na_values=None, thousands=None,  
-                  converters=None, true_values=None, 
-                  false_values=None, engine=None)
+DF_Import = pd.read_excel(dataFile, sheet_name=sheetName, header=0, 
+                  skipfooter=0, index_col=0)
 
-DF_Import_2 = pd.read_excel(dataFile_2, sheet_name=sheetName_2, header=0, skiprows=None, 
-                  skipfooter=0, index_col=0, names=None, 
-                  na_values=None, thousands=None,  
-                  converters=None, true_values=None, 
-                  false_values=None, engine=None)
+DF_Import_2 = pd.read_excel(dataFile_2, sheet_name=sheetName_2, header=0, 
+                  index_col=0)
 
 DF_Import = zScore(DF_Import, 2) # z-score data
 DF_DNP_DKK = DF_Import[DF_Import['Class'].isin(['DKK', 'DNP'])] # Collect controls and de novo PD samples
