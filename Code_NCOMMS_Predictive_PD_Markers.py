@@ -1,7 +1,6 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Proteomics and machine learning identify a distinct blood biomarker panel to detect Parkinson’s disease up to 
-# 7 years before motor disease
+# Plasma proteomics identify biomarkers predicting Parkinson´s disease up to 7 years before symptom onset
 
 # *Jenny Hällqvist1,2#, *Michael Bartl3,4#, Mohammed Dakna3, Sebastian Schade5, Paolo Garagnani6, Maria-Giulia 
 # Bacalini7, Chiara Pirazzini6, Kailash Bhatia8, Sebastian Schreglmann8, Mary Xylaki3, Sandrina Weber3, Marielle Ernst9, 
